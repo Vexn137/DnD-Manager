@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Character Sheet</title>
+  <style>
+        /* Scrollbar Styling for WebKit browsers */
+    ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+    background: transparent; /* Makes scrollbar track invisible */
+    }
+
+    ::-webkit-scrollbar-thumb {
+    background: #555; /* Thumb still visible for usability */
+    border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+    background: #666;
+    }
+
+
+    body {
+    scrollbar-width: thin;
+    scrollbar-color: #555 #2e2e2e;
+    }
+
+    :root {
+      --tile-size: 100px;
+      --background-color: #2e2e2e;
+      --text-color: #ffffff;
+      --container-bg-color: #3a3a3a;
+      --input-bg-color: #4a4a4a;
+      --input-text-color: #ffffff;
+      --border-color: #555;
+      --checkbox-color: #888;
+      --stat-box-bg-color: #444;
+      --stat-box-size: 90px;
+      --item-box-bg-color: #444;
+      --item-box-size: 90px;
+      --font-size: 14px;
+      --input-font-size: 16px;
+    }
+
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: var(--background-color);
+      color: var(--text-color);
+
+      scrollbar-width: thin;
+      scrollbar-color: #555 transparent; /* Transparent track */
+    }
+    
+    .side-bar {
+      position: fixed;
+      display: grid;
+      top: 0;
+      left: 0;
+      width: 100px;
+      height: 100%;
+      background-color: #555;
+      grid-template-rows: repeat(6, var(--tile-size));
+      align-content: center;
+    }
+
+    .upload-btn {
+      width: 80px;
+      height: 80px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #4f46e5;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .content {
+      padding: 0px;
+      height: 100%;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      /*scrollbar-gutter:unset;*/
+      flex-grow: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(9, var(--tile-size));
+      grid-template-rows: repeat(6, var(--tile-size));
+      gap: 0;
+      position: relative;
+      background: #333;
+      border: 1px solid var(--border-color);
+    }
+
+    .tile {
+      width: var(--tile-size);
+      height: var(--tile-size);
+      border: 1px solid var(--border-color);
+      box-sizing: border-box;
+    }
+
+    .draggable {
+      position: absolute;
+      background: var(--container-bg-color);
+      color: var(--text-color);
+      box-sizing: border-box;
+      resize: both;
+      overflow: hidden;
+      min-width: var(--tile-size);
+      min-height: var(--tile-size);
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drag-handle {
+      position: absolute;
+      width: 100%;
+      height: 10px;
+      background: rgba(0, 0, 0, 0.1);
+      font-size: 12px;
+      padding: 4px;
+      cursor: grab;
+      user-select: none;
+      color: var(--text-color);
+      text-align: left;
+    }
+
+    .drag-button {
+      width: 12px;
+      height: 12px;
+      font-size: 8px;
+    }
+
+    .text-box {
+      width: 100%;
+      height: 100%;
+      background: var(--input-bg-color);
+      color: var(--input-text-color);
+      border: 1px solid var(--border-color);
+      resize: none;
+      box-sizing: border-box;
+    }
+
+    .stat-box {
+      display: block;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      margin: 0px;
+      padding: 0px;
+      background: var(--stat-box-bg-color);
+      border: 1px solid var(--border-color);
+      text-align: center;
+      box-sizing: border-box;
+      border-radius: 4px;
+      font-size: var(--font-size);
+    }
+
+    .stat-box .stat-value::-webkit-outer-spin-button,
+    .stat-box .stat-value::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .stat-box .stat-value {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .stat-value {
+      position: relative;
+      margin: 1px 0;
+      padding: 0px;
+      font-size: var(--input-font-size);
+      text-align: center;
+      width: 80%;
+      height: 50%;
+      box-sizing: border-box;
+      background: var(--input-bg-color);
+      color: var(--input-text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px; 
+    }
+
+    .stat-modifier {
+      position: relative;
+      margin: 1px 0;
+      padding: 0px;
+      font-size: var(--input-font-size);
+      text-align: center;
+      width: 50%;
+      bottom: 10%;
+      box-sizing: border-box;
+      background: var(--input-bg-color);
+      color: var(--input-text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+
+    .stat-box label {
+      position: relative;
+      font-size: 20px;
+      text-align: center;
+      color: var(--text-color);
+    }
+
+    .item-box {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      margin: 5px;
+      padding: 5px;
+      background: var(--item-box-bg-color);
+      border: 1px solid var(--border-color);
+      text-align: center;
+      box-sizing: border-box;
+      border-radius: 4px;
+      font-size: var(--font-size);
+    }
+
+    .item-box input {
+      margin: 3px 0;
+      padding: 6px;
+      font-size: var(--input-font-size);
+      width: 80%;
+      box-sizing: border-box;
+      background: var(--input-bg-color);
+      color: var(--input-text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+
+    .item-box label {
+      font-size: var(--font-size);
+      color: var(--text-color);
+    }
+
+    .checkbox-list {
+      height: 100%;
+      overflow: scroll;
+      flex-grow: 1;
+
+      padding: 10px;
+      background: var(--container-bg-color);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .checkbox-list label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .checkbox-list input {
+      margin-right: 10px;
+      accent-color: var(--checkbox-color); /* Modern checkbox color */
+    }
+
+    .checkbox-list input[type="checkbox"]:checked {
+      background-color: var(--checkbox-color);
+    }
+
+    /* Ensure the stat container adjusts dynamically */
+    .stat-container {
+      display: grid;
+      /*grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);*/
+      grid-template-columns: repeat(auto-fill, 100px);
+      grid-template-rows: repeat(auto-fill, 100px);
+      margin: 0px;
+      gap: 0px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .inventory-container {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      grid-template-rows: repeat(6, 1fr);
+      gap: 10px;
+      width: 100%;
+      height: 100%;
+    }
+
+
+        /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: var(--container-bg-color);
+      padding: 20px;
+      width: 80%;
+      height: 80%;
+      border-radius: 10px;
+      overflow: auto;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    .close-btn {
+      cursor: pointer;
+      color: var(--text-color);
+      padding: 8px 16px;
+      background-color: #555;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+
+
+        .character-info {
+      width: 400px;
+      height: 200px;
+      border: 2px solid #333;
+      padding: 10px;
+      box-sizing: border-box;
+      font-family: 'Georgia', serif;
+      background: #fdfdfd;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 5px;
+    }
+
+    .info-field {
+      display: flex;
+      flex-direction: column;
+      font-size: 12px;
+    }
+
+    .info-label {
+      font-weight: bold;
+      font-size: 11px;
+      color: #444;
+    }
+
+    .info-value {
+      border: 1px solid #aaa;
+      padding: 3px 5px;
+      min-height: 20px;
+      background-color: #fff;
+    }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      font-size: 16px;
+    }
+
+    .modal-section {
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .modal-label {
+      font-weight: bold;
+      font-size: 11px;
+    }
+
+    .modal-value {
+      border: 1px solid #aaa;
+      padding: 3px 5px;
+      min-height: 20px;
+      background-color: #fff;
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="side-bar">
+    <input type="file" id="modLoader" class="mod-loader" accept=".zip" hidden />
+    <label for="modLoader" class="upload-btn">+</label>
+
+    <button class="save-btn" onclick="saveData()">Save</button>
+  </div>
+  <div class="grid" id="grid"></div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            Container Editor
+            <button class="close-btn" onclick="closeModal()">X</button>
+          </div>
+          
+          <div id="modal-body"></div>
+        </div>
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    const TILE_SIZE = 100;
+
+    window.character = JSON.parse(localStorage.getItem("character0")) ||
+    { name: "", race: "", subrace: "", class: "", subclass: "", details: {}, stats: {}, skills: {}, lvl: 1 }
+
+    console.log(window.character);
+    function saveData() {
+      console.log(window.character);
+      localStorage.setItem("character0", JSON.stringify(window.character));
+    }
+    function strWD(str) {
+      return str
+        .replace(/\[(\w+)\]/g, '.$1')   // convert indexes to properties: [0] -> .0
+        .replace(/^\./, '')             // strip a leading dot
+        .split('.')
+        .reduce((o, key) => (o && o[key] !== undefined) ? o[key] : undefined, window);
+    }
+
+    window.world = { containers: [], containerTypes: {}, details: [], stats: [], skills: [], classes: [], races: [], alignments: ["Unaligned", "Lawful Good", "Lawful Neutral", "Lawful Evil", "Neutral Good", "Neutral", "Neutral Evil", "Chaotic Good", "Chaotic Neutral", "Chaotic Evil"] };
+    window.world.details.push({name: "Name", type: "text"});
+    window.world.details.push({name: "Alignment", type: "selection", options: window.world.alignments });
+    window.world.details.push({name: "Race", type: "selection", options: window.world.races });
+
+    window.world.containerTypes = {
+      "statBoxes": {
+        
+        build: function(c) {
+          const statContainer = document.createElement("div");
+          statContainer.className = "stat-container";
+          c.content.appendChild(statContainer);
+        },
+        update: function(c) {
+          statContainer = c.content.getElementsByClassName("stat-container")[0];
+          statContainer.innerHTML = '';
+          window.world.stats.forEach((stat, index) => {
+            const statBox = document.createElement("div");
+            statBox.className = "stat-box";
+            function updateValue() {
+              const statValue = document.getElementById(`stat-value-${index}`).value;
+              const modifier = Math.floor((statValue - 10) / 2);
+              document.getElementById(`stat-modifier-${index}`).value = modifier < 0 ? `${modifier}` : `+${modifier}`;
+              window.character.stats[stat.id].value = statValue;
+            }
+            statBox.innerHTML = `
+              <label>${stat.name.substring(0,3)}</label>
+              <input type="number" class="stat-value" placeholder="" value=${window.character.stats[stat.id].value} id="stat-value-${index}">
+              <input type="text" class="stat-modifier" placeholder="" id="stat-modifier-${index}" readonly>
+            `;
+            statBox.getElementsByClassName("stat-value")[0].addEventListener("change", updateValue);
+            statContainer.appendChild(statBox);
+            updateValue();
+          });
+        }
+      },
+      "textBox": {
+        build: function(c) {
+          const textBox = document.createElement("textarea");
+          textBox.className = "text-box";
+          c.content.appendChild(textBox);
+        },
+        update: function(c) { }
+      },
+      "details": {
+        build: function(c) {
+          const detailsContainer = document.createElement("div");
+          detailsContainer.className = "character-info";
+          c.content.appendChild(detailsContainer);
+        },
+        update: function(c) {
+          detailsContainer = c.content.getElementsByClassName("character-info")[0];
+          detailsContainer.innerHTML = '';
+          window.world.details.forEach((det, index) => {
+            const detailBox = document.createElement("div");
+            detailBox.className = "info-field";
+            const detailLabel = document.createElement("div");
+            detailLabel.className = "info-label";
+            detailLabel.innerHTML += det.name;
+
+            function updateValue() {
+              window.character.stats[det.id].value = statValue;
+            }
+            if (det.type == "selection") {
+              const detailSelect = document.createElement("select");
+              detailSelect.className = "info-value";
+              det.options.forEach((option, index) => {
+                const detailOption = document.createElement("option");
+                detailOption.value = index;
+                detailOption.innerHTML += option.name || option;
+                detailSelect.appendChild(detailOption);
+              });
+
+              detailBox.appendChild(detailSelect);
+            } else {
+              const detailInput = document.createElement("input");
+              detailInput.className = "info-value";
+
+              detailBox.appendChild(detailInput);
+            }
+            //statBox.getElementsByClassName("stat-value")[0].addEventListener("change", updateValue);
+            detailsContainer.appendChild(detailBox);
+            detailBox.appendChild(detailLabel);
+            
+            //updateValue();
+          })
+        },
+        modal: function(c) {
+          const modal = document.getElementById("modal");
+          const modalBody = document.getElementById("modal-body");
+
+          window.world.details.forEach((det, index) => {
+            const detailBox = document.createElement("div");
+            detailBox.className = "modal-field";
+            const detailLabel = document.createElement("div");
+            detailLabel.className = "modal-section";
+            detailLabel.innerHTML += det.name;
+
+            detailBox.appendChild(detailLabel);
+
+            let extraDetailsBox = null;
+
+            function updateValue() {
+              window.character.stats[det.id].value = statValue;
+            }
+            if (det.type == "selection") {
+              const detailSelect = document.createElement("select");
+              detailSelect.className = "modal-value";
+
+              det.options.forEach((option, index) => {
+                const detailOption = document.createElement("option");
+                detailOption.value = option.id || option;
+                detailOption.innerHTML += option.name || option;
+                detailSelect.appendChild(detailOption);
+              });
+
+              extraDetailsBox = document.createElement("div");
+              extraDetailsBox.className = "modal-content";
+
+              detailSelect.addEventListener("change", function() {
+                const optionValue = det.options.find((element) => element.id == detailSelect.value)
+                console.log("Selected value:", detailSelect.value, optionValue);
+
+                extraDetailsBox.innerHTML = ``;
+                if (optionValue) {
+                  optionValue.forEach((value, index) => {
+                    const detailLabel = document.createElement("div");
+                    detailLabel.className = "modal-label";
+                    detailLabel.innerHTML += value;
+                    extraDetailsBox.appendChild(detailLabel);
+                  });
+                }
+              });
+
+              detailBox.appendChild(detailSelect);
+            } else {
+              const detailInput = document.createElement("input");
+              detailInput.className = "modal-value";
+
+              detailBox.appendChild(detailInput);
+            }
+            //statBox.getElementsByClassName("stat-value")[0].addEventListener("change", updateValue);
+            modalBody.appendChild(detailBox);
+
+            if (extraDetailsBox) {
+              modalBody.appendChild(extraDetailsBox);
+            }
+            
+            //updateValue();
+          })
+        }
+      },
+      "skills": {
+        build: function(c) {
+          const checkboxes = document.createElement("div");
+          checkboxes.className = "checkbox-list";
+          c.content.appendChild(checkboxes);
+        },
+        update: function(c) {
+          checkboxes = c.content.getElementsByClassName("checkbox-list")[0];
+          checkboxes.innerHTML = '';
+          window.world.skills.forEach((skill, index) => {
+            const checkboxLabel = document.createElement("label");
+            const checkboxInput = document.createElement("input");
+            checkboxInput.type = "checkbox";
+            checkboxLabel.appendChild(checkboxInput);
+            checkboxLabel.appendChild(document.createTextNode(" " + skill.name));
+            checkboxes.appendChild(checkboxLabel);
+
+            function updateValue() {
+              window.character.skills[skill.id].value = checkboxInput.checked;
+            }
+            checkboxInput.checked = window.character.skills[skill.id].value
+            checkboxInput.addEventListener("change", updateValue);
+            updateValue();
+          })
+        }
+      }
+    }
+
+    function updateContainers() {
+        window.world.containers.forEach((container, index) => {
+          window.world.containerTypes[container.type].update(container);
+        });
+    }
+    window.ModAPI = {
+      registerStat: (mod, stat) => {
+        //stat.id = mod.id+":"+stat.id;
+        window.world.stats.push(stat);
+
+        window.world.stats.forEach((stat, index) => {
+          if (!window.character.stats[stat.id]) {
+            window.character.stats[stat.id] = {base: 10, value: 10};
+          }
+        })
+
+        updateContainers()
+
+        console.log("Registered stat:", stat);
+      },
+      registerSkill: (mod, skill) => {
+        //skill.id = mod.id+":"+skill.id;
+        window.world.skills.push(skill);
+
+        window.world.skills.forEach((skill, index) => {
+          if (!window.character.skills[skill.id]) {
+            window.character.skills[skill.id] = {value: false};
+          }
+        })
+
+        updateContainers()
+        
+        console.log("Registered skill:", skill);
+      },
+      registerRace: (mod, race) => {
+        window.world.races.push(race);
+
+        updateContainers()
+        console.log("Registered race:", race);
+      },
+      registerClass: (mod, cls) => {
+        
+        console.log("Registered class:", cls);
+      },
+
+      registerContainerType: (mod, name, fn) => {
+        console.log("Registered container:", name)
+      },
+      log: (mod, msg) => console.log("[ModAPI Log]", msg)
+    };
+
+    document.getElementById("modLoader").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const zip = await JSZip.loadAsync(file);
+      window.currentModZip = zip;
+      eval(await zip.file("mod.js").async("string"))
+      const manifest = JSON.parse(await zip.file("manifest.json").async("string"));
+      const modJS = await zip.file("mod.js").async("string");
+
+      console.log('Pass first part');
+
+      /*
+      // Dynamically execute the mod's JS
+      const blob = new Blob([modJS], { type: "application/javascript" });
+      const url = URL.createObjectURL(blob);
+      const script = document.createElement("script");
+      script.src = url;
+      document.body.appendChild(script);*/
+    });
+
+    function createTiles(cols, rows) {
+      const grid = document.getElementById("grid");
+      grid.style.width = `${cols * TILE_SIZE}px`;
+      grid.style.height = `${rows * TILE_SIZE}px`;
+
+      for (let i = 0; i < rows * cols; i++) {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        grid.appendChild(tile);
+      }
+    }
+
+    function createContainer(col, row, widthInTiles, heightInTiles, style = "textBox", contentHTML = "Default content...") {
+      const grid = document.getElementById("grid");
+      const draggable = document.createElement("div");
+      draggable.className = "draggable";
+
+      // Calculate pixel size and position
+      draggable.style.width = `${widthInTiles * TILE_SIZE}px`;
+      draggable.style.height = `${heightInTiles * TILE_SIZE}px`;
+      draggable.style.left = `${col * TILE_SIZE}px`;
+      draggable.style.top = `${row * TILE_SIZE}px`;
+
+      const container = {
+        type: style,
+        element: draggable
+      }
+
+      const handle = document.createElement("div");
+      handle.className = "drag-handle";
+      //handle.textContent = style;
+
+      const openBtn = document.createElement("button");
+      openBtn.className = "drag-button";
+      openBtn.textContent = "E";
+      openBtn.style.marginTop = '1px';
+      openBtn.addEventListener("click", () => openModal(container));
+
+      handle.appendChild(openBtn);
+      
+      const span = document.createElement("span");
+      span.className = "drag-title";
+      //span.textContent = style;
+
+      handle.appendChild(span);
+
+      const content = document.createElement("div");
+      content.className = "content";
+
+      container.content = content;
+
+      // Populate the container based on the style selected
+      if (style === "textBox") {
+
+      } else if (style === "checkboxList") {
+
+    } else if (style === "inventory") {
+        const invContainer = document.createElement("div");
+        invContainer.className = "inventory-container";
+        
+        for (let i = 1; i <= 24; i++) {
+            const itemBox = document.createElement("div");
+          itemBox.className = "item-box";
+          itemBox.innerHTML = `
+            <label>${i}</label>
+            <input type="text" class="item-modifier" placeholder="Item" id="item-modifier-${i}">
+          `;
+          invContainer.appendChild(itemBox);
+        }
+
+        content.appendChild(invContainer);
+      } else {
+        //content.innerHTML = contentHTML;
+      }
+
+      draggable.appendChild(handle);
+      draggable.appendChild(content);
+
+
+      // Make the box draggable
+      let isDragging = false;
+      let offsetX = 0, offsetY = 0;
+
+      handle.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        offsetX = e.clientX - draggable.offsetLeft;
+        offsetY = e.clientY - draggable.offsetTop;
+        document.body.style.userSelect = 'none';
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+          draggable.style.left = `${e.clientX - offsetX}px`;
+          draggable.style.top = `${e.clientY - offsetY}px`;
+        }
+      });
+
+      document.addEventListener("mouseup", () => {
+        if (isDragging) {
+          isDragging = false;
+          snapPosition(draggable);
+          document.body.style.userSelect = '';
+        }
+      });
+
+      window.world.containerTypes[style].build(container);
+      window.world.containers.push(container);
+      window.world.containerTypes[style].update(container);
+
+      // Make the box resizable
+      draggable.addEventListener("mouseup", () => snapResize(draggable));
+
+      grid.appendChild(draggable);
+    }
+
+    function snapResize(el) {
+      const width = el.offsetWidth;
+      const height = el.offsetHeight;
+
+      const snappedWidth = Math.round(width / TILE_SIZE) * TILE_SIZE;
+      const snappedHeight = Math.round(height / TILE_SIZE) * TILE_SIZE;
+
+      el.style.width = `${snappedWidth}px`;
+      el.style.height = `${snappedHeight}px`;
+    }
+
+    function snapPosition(el) {
+      const left = parseInt(el.style.left, 10);
+      const top = parseInt(el.style.top, 10);
+
+      const snappedLeft = Math.round(left / TILE_SIZE) * TILE_SIZE;
+      const snappedTop = Math.round(top / TILE_SIZE) * TILE_SIZE;
+
+      el.style.left = `${snappedLeft}px`;
+      el.style.top = `${snappedTop}px`;
+    }
+    
+    function regenerateTiles(newCols, newRows) {
+        grid.innerHTML = ""; // Clear old grid
+        createTiles(newRows, newCols); // Recreate tiles
+    }
+
+    function openModal(c, contentHTML) {
+      const modal = document.getElementById("modal");
+      const modalBody = document.getElementById("modal-body");
+      modalBody.innerHTML = ``;
+      modal.style.display = "flex";
+
+      if (window.world.containerTypes[c.type].modal) {
+        window.world.containerTypes[c.type].modal(c);
+      } else {
+        modalBody.innerHTML = `<h3>Editing ${c.type}</h3><textarea style="width: 100%; height: 70%;">${1}</textarea>`;
+        modal.style.display = "flex";
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("modal");
+      modal.style.display = "none";
+    }
+
+    createTiles(9, 6);
+    // Example usage of createContainer with different styles
+    createContainer(0, 0, 4, 2, "details");
+    createContainer(0, 2, 3, 2, "statBoxes");
+    //createContainer(0, 3, 3, 3, "textBox");
+    createContainer(7, 0, 2, 4, "skills");
+
+    //createContainer(3, 3, 4, 3, "inventory");
+  </script>
+</body>
+</html>

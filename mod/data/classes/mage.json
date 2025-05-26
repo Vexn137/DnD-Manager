@@ -1,0 +1,5 @@
+{
+    "name": "Wizard",
+    "description": "A spellcaster using arcane knowledge.",
+    "startingEquipment": ["Spellbook", "Wand"]
+  }

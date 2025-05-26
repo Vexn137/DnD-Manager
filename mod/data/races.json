@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Human",
+        "speed": "30",
+        "modifiers": [ "any", "any" ],
+        "skills": [ "any" ],
+        "description": "Normal ahh ppl"
+    },
+    {
+      "name": "Elf",
+      "modifiers": [
+        "Dexterity",
+        "Dexterity"
+      ],
+      "description": "Elves are agile and intelligent."
+    },
+    {
+      "name": "Orc",
+      "modifiers": [
+        "Strength",
+        "Constitution"
+      ],
+      "description": "Orcs are strong and hardy."
+    }
+  ]
+  

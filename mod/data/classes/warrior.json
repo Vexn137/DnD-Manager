@@ -1,0 +1,5 @@
+{
+    "name": "Warrior",
+    "description": "A strong melee fighter.",
+    "startingEquipment": ["Sword", "Shield"]
+}

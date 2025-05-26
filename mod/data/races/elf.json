@@ -1,0 +1,31 @@
+{
+    "id": "elf",
+    "name": "Elf",
+    "description": "Just lil femboy twinks",
+
+    "age": [100, 750],
+    "size": [5, 6],
+    "speed": 30,
+
+    "bonuses": [ {"stat": "dexterity", "value": 2} ],
+    "skills": [ "perception" ],
+    "languages": [ "common", "elven" ],
+
+    "features": [
+        {
+            "name": "Trance",
+            "tags": ["rests"],
+            "description": "Elves do not sleep, keep playing, you just meditate half the time"
+        },
+        {
+            "name": "Darkvision",
+            "tags": ["vision", "darkness"],
+            "description": "No light, yes see"
+        },
+        {
+            "name": "Fey Ancestry",
+            "tags": ["combat", "saving_throws", "charm"],
+            "description": "You better at not sleeping, insomnia hits hard"
+        }
+    ]
+}

@@ -1,0 +1,13 @@
+{
+    "id": "human",
+    "name": "Human",
+    "description": "Normal ahh ppl",
+
+    "age": [80, 100],
+    "size": [5, 6],
+    "speed": 30,
+
+    "bonuses": [ {"stat": "any", "value": 1}, {"stat": "any", "value": 1} ],
+    "skills": [ "any" ],
+    "languages": [ "common", "any" ]
+}

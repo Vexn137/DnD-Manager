@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Warrior",
+    "description": "A strong melee fighter.",
+    "startingEquipment": ["Sword", "Shield"]
+  },
+  {
+    "name": "Wizard",
+    "description": "A spellcaster using arcane knowledge.",
+    "startingEquipment": ["Spellbook", "Wand"]
+  }
+]

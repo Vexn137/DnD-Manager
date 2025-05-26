@@ -1,0 +1,15 @@
+{
+    "name": "DnD",
+    "id": "dnd",
+    "version": "1.0.0",
+    "author": "DnD",
+    "description": "Base DnD",
+    "main": "mod.js",
+    "dependencies": [],
+    "tags": ["races", "classes"],
+    "assets": [
+      "data/races",
+      "data/classes"
+    ]
+  }
+  

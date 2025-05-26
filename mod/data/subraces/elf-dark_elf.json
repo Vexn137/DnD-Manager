@@ -1,0 +1,12 @@
+{
+    "name": "Dark Elf",
+    "description": "Just black lil femboy twinks",
+
+    "age": [100, 750],
+    "size": [5, 6],
+    "speed": 30,
+
+    "bonuses": [ {"stat": "dexterity", "value": 2}, {"stat": "charisma", "value": 1} ],
+    "skills": [ "perception" ],
+    "languages": [ "common", "elven" ]
+}
