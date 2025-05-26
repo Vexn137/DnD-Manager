@@ -445,6 +445,7 @@
         .reduce((o, key) => (o && o[key] !== undefined) ? o[key] : undefined, window);
     }
 
+    window.mods = [];
     window.world = { containers: [], containerTypes: {}, details: [], stats: [], skills: [], classes: [], races: [], alignments: ["Unaligned", "Lawful Good", "Lawful Neutral", "Lawful Evil", "Neutral Good", "Neutral", "Neutral Evil", "Chaotic Good", "Chaotic Neutral", "Chaotic Evil"] };
     window.world.details.push({name: "Name", type: "text"});
     window.world.details.push({name: "Alignment", type: "selection", options: window.world.alignments });
@@ -641,8 +642,6 @@
           }
         })
 
-        updateContainers()
-
         console.log("Registered stat:", stat);
       },
       registerSkill: (mod, skill) => {
@@ -654,8 +653,6 @@
             window.character.skills[skill.id] = {value: false};
           }
         })
-
-        updateContainers()
         
         console.log("Registered skill:", skill);
       },
@@ -669,7 +666,6 @@
         
         console.log("Registered class:", cls);
       },
-
       registerContainerType: (mod, name, fn) => {
         console.log("Registered container:", name)
       },
@@ -677,13 +673,17 @@
     };
 
     async function loadMod(file) {
+
       const zip = await JSZip.loadAsync(file);
-      window.currentModZip = zip;
+
       eval(await zip.file("mod.js").async("string"))
       const manifest = JSON.parse(await zip.file("manifest.json").async("string"));
       const modJS = await zip.file("mod.js").async("string");
 
-      console.log('Pass first part');
+      console.log("Mod loaded:", manifest);
+      window.mods.push(zip);
+
+      updateContainers()
 
       /*
       // Dynamically execute the mod's JS
@@ -700,13 +700,8 @@
         throw new Error(`Failed to fetch mod from ${url}: ${response.statusText}`);
       }
       const zipBlob = await response.blob();
-      const zip = await JSZip.loadAsync(zipBlob);
-      window.currentModZip = zip;
-      eval(await zip.file("mod.js").async("string"))
-      const manifest = JSON.parse(await zip.file("manifest.json").async("string"));
-      const modJS = await zip.file("mod.js").async("string");
 
-      console.log('Pass second part');
+      loadMod(zipBlob);
     }
 
     document.getElementById("modLoader").addEventListener("change", async (event) => {

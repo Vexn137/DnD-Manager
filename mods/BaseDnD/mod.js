@@ -1,5 +1,8 @@
 (async function () {
-  const zip = window.currentModZip;
+  const manifest = JSON.parse(await zip.file("manifest.json").async("string"));
+
+  const zip = window.mods;
+  
   if (!zip) throw new Error("currentModZip is not set.");
   if (typeof ModAPI === "undefined") throw new Error("ModAPI is not defined.");
 
