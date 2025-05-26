@@ -407,7 +407,7 @@
 </head>
 <body>
   <div class="side-bar">
-    <input type="file" id="modLoader" class="mod-loader" accept=".zip" hidden />
+    <input type="file" id="modLoader" class="mod-loader" accept=".zip, .txt" hidden />
     <label for="modLoader" class="upload-btn">+</label>
 
     <button class="save-btn" onclick="saveData()">Save</button>
@@ -676,10 +676,7 @@
       log: (mod, msg) => console.log("[ModAPI Log]", msg)
     };
 
-    document.getElementById("modLoader").addEventListener("change", async (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-
+    async function loadMod(file) {
       const zip = await JSZip.loadAsync(file);
       window.currentModZip = zip;
       eval(await zip.file("mod.js").async("string"))
@@ -695,6 +692,62 @@
       const script = document.createElement("script");
       script.src = url;
       document.body.appendChild(script);*/
+    }
+
+    async function loadModFromUrl(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch mod from ${url}: ${response.statusText}`);
+      }
+      const zipBlob = await response.blob();
+      const zip = await JSZip.loadAsync(zipBlob);
+      window.currentModZip = zip;
+      eval(await zip.file("mod.js").async("string"))
+      const manifest = JSON.parse(await zip.file("manifest.json").async("string"));
+      const modJS = await zip.file("mod.js").async("string");
+
+      console.log('Pass second part');
+    }
+
+    document.getElementById("modLoader").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (file.name.endsWith(".zip")) {
+        try {
+
+          await loadMod(file);
+          console.log("Mod loaded successfully.");
+        } catch (error) {
+          console.error("Error loading mod:", error);
+          return;
+        }
+      } else if (file.name.endsWith(".txt")) {
+        try {
+
+          const text = await file.text();
+          const urls = text
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line && !line.startsWith('#')); // skip empty lines and comments
+
+          for (const url of urls) {
+            try {
+              await loadModFromUrl(url);
+              console.log(`Loaded mod from ${url}`);
+            } catch (err) {
+              console.error(`Failed to load mod from ${url}:`, err);
+            }
+          }
+          console.log("Mod loaded successfully.");
+        } catch (error) {
+          console.error("Error loading mod:", error);
+          return;
+        }
+      } else {
+        console.error("Please upload a valid .zip file.");
+        return;
+      }
     });
 
     function createTiles(cols, rows) {
